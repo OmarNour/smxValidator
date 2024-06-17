@@ -39,14 +39,21 @@ def read_excel(file_path):
 
 def load_excel_to_duckdb(file_path):
     df_dict = read_excel(file_path)
-    con = duckdb.connect(database=':memory:')
+    file_name = file_path.name.split(".")[0]
+    con = duckdb.connect(database=f'{file_name}.duckdb')
     sheet_info = {}
 
     for sheet_name, data in df_dict.items():
         try:
             # Convert all columns to string to avoid type issues
             data = data.astype(str)
+
+            # remove spaces from column name
             data.columns = [str(c).replace('  ', ' ').replace(' ', '_').lower() for c in data]
+
+            # remove spaces from sheet_name
+            sheet_name = sheet_name.replace('  ', ' ').replace(' ', '_').lower()
+            con.execute(f"drop TABLE if exists {sheet_name}")
             con.execute(f"CREATE TABLE {sheet_name} AS SELECT * FROM data")
             sheet_info[sheet_name] = list(data.columns)
         except Exception as e:
