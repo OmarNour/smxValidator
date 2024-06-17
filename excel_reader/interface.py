@@ -4,14 +4,15 @@ from excel_reader.query_executor import execute_query
 
 
 def main():
+    print("#####1234")
     st.title("Excel to SQL Interface")
 
-    uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
+    uploaded_file = st.sidebar.file_uploader("Choose an Excel file", type="xlsx")
 
     if uploaded_file is not None:
         con, sheet_info = load_excel_to_duckdb(uploaded_file)
         if sheet_info:
-            st.success("Excel file loaded successfully!")
+            st.sidebar.success("Excel file loaded successfully!")
 
             st.sidebar.title("Sheets and Columns")
             for sheet, columns in sheet_info.items():

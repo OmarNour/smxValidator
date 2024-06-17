@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import duckdb
 from functions import get_file_name
+import streamlit as st
 
 
 class Excel:
@@ -29,8 +30,15 @@ class Excel:
             self.parse_sheet(file_name, sheet)
 
 
-def load_excel_to_duckdb(file_path):
+@st.cache_data
+def read_excel(file_path):
+    print("#####12345")
     df_dict = pd.read_excel(file_path, sheet_name=None, engine='openpyxl')  # Load all sheets
+    return df_dict
+
+
+def load_excel_to_duckdb(file_path):
+    df_dict = read_excel(file_path)
     con = duckdb.connect(database=':memory:')
     sheet_info = {}
 
@@ -38,9 +46,10 @@ def load_excel_to_duckdb(file_path):
         try:
             # Convert all columns to string to avoid type issues
             data = data.astype(str)
+            data.columns = [str(c).replace('  ', ' ').replace(' ', '_').lower() for c in data]
             con.execute(f"CREATE TABLE {sheet_name} AS SELECT * FROM data")
             sheet_info[sheet_name] = list(data.columns)
         except Exception as e:
-            print(f"Error loading sheet {sheet_name}: {e}")
+            print(f"Error loading sheet {sheet_name}: {e}, {data.columns}")
 
     return con, sheet_info
